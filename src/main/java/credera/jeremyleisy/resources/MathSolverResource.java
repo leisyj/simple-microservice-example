@@ -1,8 +1,7 @@
 package credera.jeremyleisy.resources;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.stream.IntStream;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -19,31 +18,26 @@ import com.codahale.metrics.annotation.Timed;
 
 public class MathSolverResource
 {
-   private final Random random = new Random();
-
    @POST
    @Timed
    @Path("/add")
-   public String addNumbers(List<Double> numbers)
+   public String addNumbers(double numbers[])
    {
-      return String.valueOf(numbers.stream().mapToDouble(Double::doubleValue).sum());
+      return String.valueOf(Arrays.stream(numbers).sum());
    }
 
    @POST
    @Timed
    @Path("/curve-fit")
-   public String fitCurve(List<Double> numbers)
+   public double[] fitCurve(double numbers[])
    {
-      random.nextDouble();
       final WeightedObservedPoints obs = new WeightedObservedPoints();
-      numbers.stream().forEach(pt -> obs.add(random.nextDouble(), pt));
+      IntStream.range(0, numbers.length).forEach(idx -> obs.add(idx, numbers[idx]));
 
-      // Instantiate a third-degree polynomial fitter.
-      final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(6);
+      // Instantiate a nth-degree polynomial fitter.
+      final PolynomialCurveFitter fitter = PolynomialCurveFitter.create(10);
 
       // Retrieve fitted parameters (coefficients of the polynomial function).
-      final double[] coeff = fitter.fit(obs.toList());
-
-      return Arrays.toString(coeff);
+      return fitter.fit(obs.toList());
    }
 }
